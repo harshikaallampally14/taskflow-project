@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow — Productivity &amp; Task Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
+  <div class="max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
+
+    <!-- Header -->
+    <header class="flex items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight truncate">TaskFlow</h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">Organize tasks, set due dates, and stay on track</p>
+        </div>
+      </div>
+
+      <button
+        id="theme-toggle"
+        type="button"
+        aria-label="Toggle dark mode"
+        class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+      >
+        <svg id="icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <svg id="icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- Progress & Stats Card -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div class="flex items-center gap-4 sm:gap-6">
+          <div>
+            <span class="text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">Total</span>
+            <p id="stat-total" class="text-lg sm:text-xl font-bold">0</p>
+          </div>
+          <div class="h-7 w-px bg-slate-200 dark:bg-slate-800"></div>
+          <div>
+            <span class="text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">Active</span>
+            <p id="stat-active" class="text-lg sm:text-xl font-bold text-indigo-600 dark:text-indigo-400">0</p>
+          </div>
+          <div class="h-7 w-px bg-slate-200 dark:bg-slate-800"></div>
+          <div>
+            <span class="text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">Completed</span>
+            <p id="stat-completed" class="text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400">0</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span id="stat-percent" class="text-sm font-semibold text-slate-700 dark:text-slate-200">0%</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 block">completion rate</span>
+        </div>
+      </div>
+      <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+        <div id="progress-bar" class="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full" style="width: 0%"></div>
+      </div>
+    </section>
+
+    <!-- Create Task Form -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
+      <form id="task-form" class="space-y-3" novalidate>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex-1">
+            <label for="task-title-input" class="sr-only">Task description</label>
+            <input
+              id="task-title-input"
+              type="text"
+              placeholder="What needs to be done?"
+              maxlength="140"
+              required
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-sm sm:text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            />
+          </div>
+          <button
+            type="submit"
+            class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-medium text-sm sm:text-base flex items-center justify-center gap-2 shadow-sm transition shrink-0"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>Add Task</span>
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 flex-1 min-w-[150px]">
+            <label for="task-category-input" class="text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">Category:</label>
+            <select
+              id="task-category-input"
+              class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="Study">Study</option>
+              <option value="Health">Health</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 flex-1 min-w-[170px]">
+            <label for="task-date-input" class="text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">Due Date:</label>
+            <input
+              id="task-date-input"
+              type="date"
+              class="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+
+        <p id="form-error" class="hidden text-xs text-rose-600 dark:text-rose-400 font-medium"></p>
+      </form>
+    </section>
+
+    <!-- Controls: Search, Status Filter, Category Filter -->
+    <section class="space-y-3 mb-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <!-- Status Filter Tabs -->
+        <div class="inline-flex p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800/90 self-start" role="tablist" aria-label="Filter tasks by status">
+          <button
+            type="button"
+            data-status="all"
+            class="status-tab px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition"
+          >
+            All <span class="tab-count ml-1 text-xs opacity-75">0</span>
+          </button>
+          <button
+            type="button"
+            data-status="active"
+            class="status-tab px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition"
+          >
+            Active <span class="tab-count ml-1 text-xs opacity-75">0</span>
+          </button>
+          <button
+            type="button"
+            data-status="completed"
+            class="status-tab px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition"
+          >
+            Completed <span class="tab-count ml-1 text-xs opacity-75">0</span>
+          </button>
+        </div>
+
+        <!-- Search Box -->
+        <div class="relative flex-1 sm:max-w-xs">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search tasks..."
+            aria-label="Search tasks"
+            class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+      </div>
+
+      <!-- Category Filter Pills & Clear Completed -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div id="category-filters" class="flex flex-wrap items-center gap-1.5">
+          <button type="button" data-category="all" class="cat-pill px-3 py-1 rounded-full text-xs font-medium transition">All Categories</button>
+          <button type="button" data-category="Work" class="cat-pill px-3 py-1 rounded-full text-xs font-medium transition">Work</button>
+          <button type="button" data-category="Personal" class="cat-pill px-3 py-1 rounded-full text-xs font-medium transition">Personal</button>
+          <button type="button" data-category="Study" class="cat-pill px-3 py-1 rounded-full text-xs font-medium transition">Study</button>
+          <button type="button" data-category="Health" class="cat-pill px-3 py-1 rounded-full text-xs font-medium transition">Health</button>
+          <button type="button" data-category="Other" class="cat-pill px-3 py-1 rounded-full text-xs font-medium transition">Other</button>
+        </div>
+
+        <button
+          id="clear-completed-btn"
+          type="button"
+          class="hidden text-xs font-medium text-rose-600 dark:text-rose-400 hover:underline px-2 py-1"
+        >
+          Clear completed
+        </button>
+      </div>
+    </section>
+
+    <!-- Task List Container -->
+    <main>
+      <ul id="task-list" class="space-y-2.5" aria-live="polite"></ul>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-12 px-4 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
+        <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <h2 id="empty-title" class="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200">No tasks found</h2>
+        <p id="empty-subtitle" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Add a new task above or adjust your filters.</p>
+      </div>
+
+      <p class="mt-4 text-center text-xs text-slate-400 dark:text-slate-500">
+        Tip: Drag and drop tasks by the grip handle to reorder them. Changes save automatically to your browser.
+      </p>
+    </main>
+  </div>
+
+  <!-- Edit Task Modal -->
+  <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="edit-modal-title" class="text-base sm:text-lg font-semibold">Edit Task</h2>
+        <button id="close-modal-btn" type="button" aria-label="Close modal" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="edit-form" class="space-y-4">
+        <div>
+          <label for="edit-title-input" class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Task Title</label>
+          <input
+            id="edit-title-input"
+            type="text"
+            maxlength="140"
+            required
+            class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="edit-category-input" class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Category</label>
+            <select
+              id="edit-category-input"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="Study">Study</option>
+              <option value="Health">Health</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="edit-date-input" class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Due Date</label>
+            <input
+              id="edit-date-input"
+              type="date"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button
+            id="cancel-edit-btn"
+            type="button"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium shadow-sm"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs sm:text-sm font-medium shadow-lg"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
